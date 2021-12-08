@@ -2,7 +2,6 @@ module TcTurtle exposing (..)
 
 import Parser exposing (..)
 
-
 type Inst
     = Forward Int
     | Left Int
@@ -14,10 +13,8 @@ type alias Cursor =
     { x : Float, y : Float, size : Float }
 
 
-read : String -> List Inst
-read = run (
-
-    )
+read : String -> Result (List DeadEnd) (List Inst)
+read = run parseExpression 
 
 
 parseExpression : Parser (List Inst)
@@ -28,32 +25,32 @@ parseExpression =
     , end = "]"
     , spaces = spaces
     , item = parseInstruction
-    , trailing = Trailing.Optional
+    , trailing = Parser.Optional
     }
 
 
-parseInstruction : Parser (List Inst)
+parseInstruction : Parser Inst
 parseInstruction = 
-oneOf [
-    succeed Forward
-    |= symbol "Forward"
-    |. spaces
-    |= int
+    oneOf [
+        succeed Forward
+        |= keyword "Forward"
+        |. spaces
+        |= int
 
-    , succeed Left
-    |= symbol "Left"
-    |. spaces
-    |= int
+        , succeed Left
+        |= keyword "Left"
+        |. spaces
+        |= int
 
-    , succeed Right
-    |= symbol "Right"
-    |. spaces
-    |= int
+        , succeed Right
+        |= keyword "Right"
+        |. spaces
+        |= int
 
-    , succeed Repeat
-    |= symbol "Repeat"
-    |. spaces
-    |= int
-    |. spaces
-    |= (\_ -> parseExpression)
-]
+        , succeed Repeat
+        |= keyword "Repeat"
+        |. spaces
+        |= int
+        |. spaces
+        |= (\_ -> parseExpression)
+    ]

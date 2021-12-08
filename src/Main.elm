@@ -5,6 +5,7 @@ import Html exposing (Attribute, Html, div, input, text)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onInput)
 
+import TcTurtle exposing (read)
 
 
 -- MAIN
@@ -50,6 +51,6 @@ update msg model =
 view : Model -> Html Msg
 view model =
     div []
-        [ input [ placeholder "Text to reverse", value model.inputCommand, onInput Change ] []
-        , div [] [ text (String.reverse model.inputCommand) ]
+        [ input [ placeholder "TcTurtle instructions", value model.inputCommand, onInput Change ] []
+        , div [] [ text (Debug.toString (read model.inputCommand)) ]
         ]
