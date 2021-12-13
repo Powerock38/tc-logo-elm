@@ -2,16 +2,17 @@ module TcTurtle exposing (..)
 
 import Parser exposing (..)
 
+type Keyword = Forward | Left | Right | Repeat
 
 type Inst
     = Inst
-        { keyword : String
-        , value : Int
+        { keyword : Keyword
+        , value : Float
         , insts : Maybe (List Inst)
         }
 
 
-makeSimpleInst : String -> Int -> Inst
+makeSimpleInst : Keyword -> Float -> Inst
 makeSimpleInst keyword value =
     Inst
         { keyword = keyword
@@ -20,7 +21,7 @@ makeSimpleInst keyword value =
         }
 
 
-makeCompleteInst : String -> Int -> List Inst -> Inst
+makeCompleteInst : Keyword -> Float -> List Inst -> Inst
 makeCompleteInst keyword value insts =
     Inst
         { keyword = keyword
@@ -49,22 +50,22 @@ parseExpression =
 parseInstruction : Parser Inst
 parseInstruction =
     oneOf
-        [ succeed (makeSimpleInst "Forward")
+        [ succeed (makeSimpleInst Forward)
             |. keyword "Forward"
             |. spaces
-            |= int
-        , succeed (makeSimpleInst "Left")
+            |= float
+        , succeed (makeSimpleInst Left)
             |. keyword "Left"
             |. spaces
-            |= int
-        , succeed (makeSimpleInst "Right")
+            |= float
+        , succeed (makeSimpleInst Right)
             |. keyword "Right"
             |. spaces
-            |= int
-        , succeed (makeCompleteInst "Repeat")
+            |= float
+        , succeed (makeCompleteInst Repeat)
             |. keyword "Repeat"
             |. spaces
-            |= int
+            |= float
             |. spaces
             |= lazy (\_ -> parseExpression)
         ]
