@@ -2,7 +2,13 @@ module TcTurtle exposing (..)
 
 import Parser exposing (..)
 
-type Keyword = Forward | Left | Right | Repeat
+
+type Keyword
+    = Forward
+    | Left
+    | Right
+    | Repeat
+
 
 type Inst
     = Inst

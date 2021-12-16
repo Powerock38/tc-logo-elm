@@ -1,11 +1,13 @@
 module Main exposing (..)
 
 import Browser
+import Draw exposing (Cursor, draw)
 import Html exposing (Html, div, input, text)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onInput)
-
 import TcTurtle exposing (read)
+import Html.Parser
+import Html.Parser.Util
 
 
 -- MAIN
@@ -44,6 +46,25 @@ update msg model =
             { model | inputCommand = newContent }
 
 
+textHtml : String -> List (Html.Html msg)
+textHtml t =
+    case Html.Parser.run t of
+        Ok nodes ->
+            Html.Parser.Util.toVirtualDom nodes
+
+        Err _ ->
+            []
+
+execute : String -> String
+execute command =
+    case read command of
+        Ok insts ->
+            draw insts (Cursor 0 0 0)
+
+        Err deadends ->
+            Debug.toString deadends
+
+
 
 -- VIEW
 
@@ -52,5 +73,5 @@ view : Model -> Html Msg
 view model =
     div []
         [ input [ placeholder "TcTurtle instructions", value model.inputCommand, onInput Change ] []
-        , div [] [ text (Debug.toString (read model.inputCommand)) ]
+        , div [] [ textHtml (execute model.inputCommand) ]
         ]

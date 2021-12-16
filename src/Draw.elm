@@ -1,26 +1,10 @@
 module Draw exposing (..)
 
-import TcTurtle exposing (Inst, Keyword(..))
+import TcTurtle exposing (Inst(..), Keyword(..), makeCompleteInst)
 
 
 type alias Cursor =
     { x : Float, y : Float, a : Float }
-
-
-
--- type alias SimpleInst =
---     { keyword : Keyword, value : Float }
--- unfoldRepeats : List Inst -> List SimpleInst
--- unfoldRepeats insts =
---     List.map
---         (\{ keyword, value, repeatInsts } ->
---             case keyword of
---                 Repeat ->
---                     unfoldRepeats repeatInsts
---                 _ ->
---                     { keyword = keyword, value = value }
---         )
---         insts
 
 
 getLine : Float -> Float -> Float -> Float -> String
@@ -28,36 +12,77 @@ getLine x1 y1 x2 y2 =
     "<line x1=\"" ++ String.fromFloat x1 ++ "\" y1=\"" ++ String.fromFloat y1 ++ "\" x2=\"" ++ String.fromFloat x2 ++ "\" y2=\"" ++ String.fromFloat y2 ++ "\" style=\"stroke:red\" />"
 
 
-drawOne : Cursor -> Inst -> ( String, Cursor )
-drawOne c inst =
-    let
-        { x, y, a } =
-            c
+changeAngle : Float -> Float
+changeAngle a =
+    if a < 0 then
+        changeAngle a + 360
 
-        { keyword, value } =
-            inst
-    in
-    case keyword of
-        Forward ->
+    else if a >= 360 then
+        changeAngle a - 360
+
+    else
+        a
+
+
+getKeyword : Inst -> Keyword
+getKeyword inst =
+    case inst of
+        Inst i ->
+            i.keyword
+
+
+getValue : Inst -> Float
+getValue inst =
+    case inst of
+        Inst i ->
+            i.value
+
+
+draw : List Inst -> Cursor -> String
+draw insts c =
+    case insts of
+        [] ->
+            ""
+
+        inst :: is ->
             let
-                dx =
-                    value * (cos a / 180.0 * pi)
+                { x, y, a } =
+                    c
 
-                dy =
-                    value * (sin a / 180.0 * pi)
+                keyword =
+                    getKeyword inst
+
+                value =
+                    getValue inst
             in
-            ( getLine x y (x + dx) (y + dy), Cursor (x + dx) (y + dy) a )
+            case keyword of
+                Repeat ->
+                    if value > 0 then
+                        let
+                            newRepeat =
+                                makeCompleteInst Repeat (value - 1) is
+                        in
+                        draw (newRepeat :: is) c ++ draw is c
 
-        Left ->
-            ( "", Cursor x y (a - value) )
+                    else
+                        draw is c
 
-        Right ->
-            ( "", Cursor x y (a + value) )
+                Forward ->
+                    let
+                        dx =
+                            value * (cos a / 180.0 * pi)
 
-        Repeat ->
-            ( "", Cursor x y a )
+                        dy =
+                            value * (sin a / 180.0 * pi)
+                    in
+                    getLine x y (x + dx) (y + dy)
+                        ++ draw is
+                            { x = x + dx, y = y + dy, a = a }
 
+                Left ->
+                    draw is
+                        { x = x, y = y, a = changeAngle (a - value) }
 
-
--- draw : (List Inst) -> String
--- draw =
+                Right ->
+                    draw is
+                        { x = x, y = y, a = changeAngle (a + value) }
