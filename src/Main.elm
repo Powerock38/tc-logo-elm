@@ -3,11 +3,13 @@ module Main exposing (..)
 import Browser
 import Draw exposing (Cursor, draw)
 import Html exposing (Html, div, input, text)
-import Html.Attributes exposing (..)
+import Html.Attributes exposing (placeholder, value)
 import Html.Events exposing (onInput)
+import Svg exposing (svg)
+import Svg.Attributes exposing (height, width, viewBox)
 import TcTurtle exposing (read)
-import Html.Parser
-import Html.Parser.Util
+import Html.Attributes exposing (style)
+
 
 
 -- MAIN
@@ -46,23 +48,14 @@ update msg model =
             { model | inputCommand = newContent }
 
 
-textHtml : String -> List (Html.Html msg)
-textHtml t =
-    case Html.Parser.run t of
-        Ok nodes ->
-            Html.Parser.Util.toVirtualDom nodes
-
-        Err _ ->
-            []
-
-execute : String -> String
+execute : String -> List (Html msg)
 execute command =
     case read command of
         Ok insts ->
             draw insts (Cursor 0 0 0)
 
         Err deadends ->
-            Debug.toString deadends
+            [ text (Debug.toString deadends) ]
 
 
 
@@ -72,6 +65,8 @@ execute command =
 view : Model -> Html Msg
 view model =
     div []
-        [ input [ placeholder "TcTurtle instructions", value model.inputCommand, onInput Change ] []
-        , div [] [ textHtml (execute model.inputCommand) ]
+        [ input [ placeholder "TcTurtle instructions. Example : [Repeat 8 [Forward 100, Left 45]]", value model.inputCommand, onInput Change, style "width" "100%", style "height" "3rem" ] []
+        , div []
+            [ svg [ width "1000", height "800", viewBox "-500 -400 1000 800" ] (execute model.inputCommand)
+            ]
         ]

@@ -1,5 +1,7 @@
 module Draw exposing (..)
 
+import Svg exposing (Svg, line)
+import Svg.Attributes exposing (..)
 import TcTurtle exposing (Inst(..), Keyword(..), makeCompleteInst)
 
 
@@ -7,18 +9,29 @@ type alias Cursor =
     { x : Float, y : Float, a : Float }
 
 
-getLine : Float -> Float -> Float -> Float -> String
-getLine x1 y1 x2 y2 =
-    "<line x1=\"" ++ String.fromFloat x1 ++ "\" y1=\"" ++ String.fromFloat y1 ++ "\" x2=\"" ++ String.fromFloat x2 ++ "\" y2=\"" ++ String.fromFloat y2 ++ "\" style=\"stroke:red\" />"
+getLine : Float -> Float -> Float -> Float -> Svg msg
+getLine x1_p y1_p x2_p y2_p =
+    line
+        [ x1 (String.fromFloat x1_p)
+        , y1
+            (String.fromFloat y1_p)
+        , x2
+            (String.fromFloat x2_p)
+        , y2
+            (String.fromFloat y2_p)
+        , style
+            "stroke: red"
+        ]
+        []
 
 
 changeAngle : Float -> Float
 changeAngle a =
     if a < 0 then
-        changeAngle a + 360
+        changeAngle (a + 360)
 
     else if a >= 360 then
-        changeAngle a - 360
+        changeAngle (a - 360)
 
     else
         a
@@ -38,11 +51,27 @@ getValue inst =
             i.value
 
 
-draw : List Inst -> Cursor -> String
+getInsts : Inst -> List Inst
+getInsts inst =
+    case inst of
+        Inst i ->
+            let
+                is_m =
+                    i.insts
+            in
+            case is_m of
+                Just is ->
+                    is
+
+                Nothing ->
+                    []
+
+
+draw : List Inst -> Cursor -> List (Svg msg)
 draw insts c =
     case insts of
         [] ->
-            ""
+            []
 
         inst :: is ->
             let
@@ -59,10 +88,13 @@ draw insts c =
                 Repeat ->
                     if value > 0 then
                         let
+                            inst_insts =
+                                getInsts inst
+
                             newRepeat =
-                                makeCompleteInst Repeat (value - 1) is
+                                makeCompleteInst Repeat (value - 1) inst_insts
                         in
-                        draw (newRepeat :: is) c ++ draw is c
+                        draw (inst_insts ++ [ newRepeat ]) c ++ draw is c
 
                     else
                         draw is c
@@ -70,13 +102,13 @@ draw insts c =
                 Forward ->
                     let
                         dx =
-                            value * (cos a / 180.0 * pi)
+                            value * cos (degrees a)
 
                         dy =
-                            value * (sin a / 180.0 * pi)
+                            value * sin (degrees a)
                     in
                     getLine x y (x + dx) (y + dy)
-                        ++ draw is
+                        :: draw is
                             { x = x + dx, y = y + dy, a = a }
 
                 Left ->
